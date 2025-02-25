@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: inventarios-db
+    restart: always
+    environment:
+      POSTGRES_DB: inventarios
+      POSTGRES_USER: postgres  
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - inventarios_data:/var/lib/postgresql/data
+
+  api:
+    build: .
+    container_name: inventarios-api
+    restart: always
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/inventarios  
+    ports:
+      - "4000:4000"
+    volumes:
+      - .:/app
+
+volumes:
+  inventarios_data:
+
