@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "start": "node -r dotenv/config src/app.js",
-    "dev": "nodemon -r dotenv/config src/app.js"
+    "dev": "nodemon -r dotenv/config src/app.js",
+    "migrate": "npx sequelize-cli db:migrate",
+  "seed": "npx sequelize-cli db:seed:all"
   },
   "keywords": [],
   "author": "",
