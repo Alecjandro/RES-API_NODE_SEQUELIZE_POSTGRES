@@ -1,6 +1,6 @@
 {
-  "config": "config/config.mjs",
-  "models-path": "models",
-  "seeders-path": "seeders",
-  "migrations-path": "migrations"
+  "config": "./config/config.mjs",
+  "models-path": "./models",
+  "seeders-path": "./seeders",
+  "migrations-path": "./migrations"
 }
