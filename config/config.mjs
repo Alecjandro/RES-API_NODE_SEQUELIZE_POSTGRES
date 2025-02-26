@@ -5,7 +5,7 @@ export default {
     username: "postgres",
     password: "postgres",
     database: "inventarios",
-    host: "db",
+    host: "127.0.0.1",
     dialect: "postgres"
   },
   test: {
@@ -16,7 +16,7 @@ export default {
     dialect: "postgres"
   },
   production: {
-    use_env_variable: process.env.DATABASE_URL, // Render proporciona esta variable
+    database_url: process.env.DATABASE_URL, // Nombre más claro
     dialect: "postgres",
     dialectOptions: {
       ssl: {
