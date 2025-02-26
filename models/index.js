@@ -16,45 +16,62 @@ const db = {};
 // Conectar Sequelize
 let sequelize;
 if (env === 'production') {
-  if (!dbConfig.database_url) {
+  const databaseUrl = process.env.DATABASE_URL; // Se usa directamente la variable de entorno
+  if (!databaseUrl) {
     throw new Error("DATABASE_URL no está definida en las variables de entorno.");
   }
-  sequelize = new Sequelize(dbConfig.database_url, {
-    dialect: dbConfig.dialect,
-    dialectOptions: dbConfig.dialectOptions,
+  sequelize = new Sequelize(databaseUrl, {
+    dialect: "postgres",
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false,
+      },
+    },
   });
 } else {
   sequelize = new Sequelize(dbConfig.database, dbConfig.username, dbConfig.password, {
     host: dbConfig.host,
-    dialect: dbConfig.dialect
+    dialect: dbConfig.dialect,
   });
 }
 
 // Función para importar modelos
 const importModel = async (file) => {
-  const modelModule = await import(path.join(__dirname, file));
+  const modelModule = await import(`file://${path.resolve(__dirname, file)}`);
   const model = modelModule.default(sequelize, Sequelize.DataTypes);
   db[model.name] = model;
 };
 
 // Cargar modelos dinámicamente
 const loadModels = async () => {
-  const files = (await fs.readdir(__dirname))
-    .filter(file => file.endsWith('.js') && file !== 'index.js');
+  try {
+    const files = (await fs.readdir(__dirname)).filter(
+      (file) => file.endsWith('.js') && file !== 'index.js'
+    );
 
-  for (const file of files) {
-    await importModel(file);
-  }
-
-  // Asociar modelos si tienen la función `associate`
-  Object.keys(db).forEach(modelName => {
-    if (db[modelName].associate) {
-      db[modelName].associate(db);
+    for (const file of files) {
+      await importModel(file);
     }
-  });
+
+    // Asociar modelos si tienen la función `associate`
+    Object.keys(db).forEach((modelName) => {
+      if (db[modelName].associate) {
+        db[modelName].associate(db);
+      }
+    });
+  } catch (error) {
+    console.error("Error al cargar modelos:", error);
+    throw error;
+  }
 };
 
-await loadModels();
+// Llamar a loadModels correctamente en una función asíncrona
+const initDB = async () => {
+  await loadModels();
+};
+
+await initDB(); // Ejecutar inicialización correctamente
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
