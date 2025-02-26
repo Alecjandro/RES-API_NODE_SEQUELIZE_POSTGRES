@@ -1,40 +1,50 @@
-import fs from 'fs';
+import { Sequelize } from 'sequelize';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { Sequelize } from 'sequelize';
 import process from 'process';
+import config from '../config/config.mjs'; // Importamos config.mjs como un módulo ES
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
 const env = process.env.NODE_ENV || 'development';
-const configPath = path.resolve('config/config.json');
-const configJson = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-const config = configJson[env];
+const dbConfig = config[env];
 
 const db = {};
 
-
 // Conectar Sequelize
 let sequelize;
-if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], config);
+if (dbConfig.use_env_variable) {
+  sequelize = new Sequelize(process.env[dbConfig.use_env_variable], dbConfig);
 } else {
-  sequelize = new Sequelize(config.database, config.username, config.password, config);
+  sequelize = new Sequelize(dbConfig.database, dbConfig.username, dbConfig.password, dbConfig);
 }
 
 // Leer modelos
-fs.readdirSync(__dirname)
-  .filter(file => file.endsWith('.js') && file !== 'index.js')
-  .forEach(async file => {
-    const modelModule = await import(path.join(__dirname, file));
-    const model = modelModule.default(sequelize, Sequelize.DataTypes);
-    db[model.name] = model;
-  });
+const importModel = async (file) => {
+  const modelModule = await import(path.join(__dirname, file));
+  const model = modelModule.default(sequelize, Sequelize.DataTypes);
+  db[model.name] = model;
+};
 
-Object.keys(db).forEach(modelName => {
-  if (db[modelName].associate) {
-    db[modelName].associate(db);
+// Cargar modelos dinámicamente
+const loadModels = async () => {
+  const files = (await import('fs')).readdirSync(__dirname)
+    .filter(file => file.endsWith('.js') && file !== 'index.js');
+
+  for (const file of files) {
+    await importModel(file);
   }
-});
+
+  // Asociar modelos si tienen la función `associate`
+  Object.keys(db).forEach(modelName => {
+    if (db[modelName].associate) {
+      db[modelName].associate(db);
+    }
+  });
+};
+
+await loadModels(); // Ejecuta la carga de modelos
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;

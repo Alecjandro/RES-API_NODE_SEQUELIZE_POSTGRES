@@ -4,14 +4,15 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node src/app.js",
-    "dev": "node --env-file .env --watch src/app.js"
-  },
+  "start": "node src/app.js",
+  "dev": "nodemon -r dotenv/config src/app.js"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "morgan": "^1.10.0",
     "pg": "^8.13.3",
@@ -19,6 +20,7 @@
     "sequelize": "^6.37.5"
   },
   "devDependencies": {
+    "nodemon": "^3.1.9",
     "sequelize-cli": "^6.6.2"
   }
 }
